@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<head>
+    <title>Infiinte zoom - No libraries</title>
+    <link rel="stylesheet" href="myStyle.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+</head>
+<body>
+
+
+    <canvas id="stage" width="1920" height="1080" ></canvas>
+    <br>
+    <button id="zoomBtn" onclick="zoom()">ZOOM</button>
+    <input  type="file" id="fileInput"  multiple />
+    <br>
+    <br>
+    <script src="myImage.js" ></script>
+    <script>
+
+
+        let myImages = initializeImages(100);
+        renderImageList();
+
+        const ctx = stage.getContext("2d");
+        let offset = 0;
+
+        fileInput.addEventListener("change", (event) => {
+            const files = Array.from(event.target.files)
+           
+            if (files.length > 0) {
+              
+                loadImages(files)
+            }
+        });
+
+        function loadImages(files) {
+            
+            myImages = files.map((file) => {
+                const img = new MyImage();
+                img.loadAndDrawing(file)
+                return img;
+            })
+          
+            renderImageList()
+        }
+
+
+        function renderImageList() {
+            const thumbs = document.querySelectorAll(".image-thumb");
+            thumbs.forEach((thumb) => thumb.remove());
+            myImages.forEach((img) => img.addTo(document.body))
+            myImages.forEach((img) => img.addClass('image-thumb'))
+
+        }
+
+        function zoom() {
+            zoomBtn.disabled = true;
+
+            const index = Math.floor(offset);
+            const img = myImages[index];
+            const percent = offset - index;
+            const scaler = (1 - percent) * 2 + 1;
+
+            const width = stage.width * scaler;
+            const height = stage.height * scaler;
+            const left = (stage.width - width) / 2;
+            const top = (stage.height - height) / 2;
+            img.draw(ctx, left, top, width, height);
+            const speed = 0.01 * 3 ** index;
+
+            offset += 1 / 3 ** offset * speed;
+
+            if (offset < myImages.length) {
+                requestAnimationFrame(zoom);
+            } else {
+                offset = 0;
+                zoomBtn.disabled = false;
+            }
+        }
+
+
+        function initializeImages(num) {
+            const imgs = [];
+            for (let i = 0; i < num; i++) {
+                imgs.push(new MyImage(i != 0 && imgs[i - 1]))
+            }
+            return imgs;
+        }
+    </script>
+
+</body>
+</html>
